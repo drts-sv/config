@@ -1,0 +1,7 @@
+narodmon_sender:
+  module: narodmon_sender
+  class: narodmon_sender
+  narodmon_device_mac: HA00045f91aff5
+  narodmon_device_name: 'Пионерская, 9'
+  hass_coordinates_entity: zone.home
+  hass_sensor_entities: sensor.outdoor_temperature,sensor.outdoor_humidity

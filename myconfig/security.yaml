@@ -1,0 +1,93 @@
+template:
+  - sensor:
+    - name: 'Последний сработавший датчик движения'
+      unique_id: last_motion
+#        device_class: timestamp
+      state: >
+          {%- set sensors = expand('group.motion') %}
+          {% for sensor in sensors %}
+            {% if as_timestamp(sensor.last_changed) == as_timestamp(sensors | map(attribute='last_changed') | max ) %}
+              {{ sensor.name }}
+            {% endif %}
+          {% endfor %}
+      icon: mdi:motion-sensor
+#      availability: >-
+      attributes:
+        motion_time: >
+          {%- set sensors = expand('group.motion') %}
+          {% for sensor in sensors %}
+          {% if as_timestamp(sensor.last_changed) == as_timestamp(sensors | map(attribute='last_changed') | max ) %}
+          {{ as_timestamp(sensor.last_changed) }}
+          {% endif %}
+          {% endfor %}
+
+    - name: Время последнего обнаружения движения
+      #      device_class: timestamp
+#    - name: Last Motion Time
+      unique_id: last_motion_time
+      state: >
+        {{ state_attr ('sensor.last_motion', 'motion_time') | timestamp_custom ('%H:%M:%S %d.%m.%y', true,0) }}
+
+#      state: '{{ as_timestamp(states.group.motion.last_changed) | timestamp_custom("%a %d %b %H:%M",true,0) }}'
+#      state: >-
+#          {{ state_attr ('sensor.last_motion', 'motion_time') }}
+      icon: mdi:motion-sensor
+
+    - name: Время последнего открытия двери
+      #      device_class: timestamp
+#    - name: Last Door Time
+      unique_id: last_door_time
+      state: >
+        {{ ( state_attr ('input_datetime.last_opendoor_time', 'timestamp') | timestamp_custom ("%H:%M:%S %d.%m.%y", true, 0)) }}
+      icon: mdi:door-open
+
+    - name: Время последнего движения кухня
+      #      device_class: timestamp
+#    - name: Last Door Time
+      unique_id: last_motion_time_kitchen
+      state: >
+        {{ ( state_attr ('input_datetime.last_motion_time_kitchen', 'timestamp') | timestamp_custom ("%H:%M:%S %d.%m.%y", true, 0)) }}
+      icon: mdi:motion-sensor
+
+    - name: Время последнего движения комната 1
+      #      device_class: timestamp
+#    - name: Last Door Time
+      unique_id: last_motion_time_room1
+      state: >
+        {{ ( state_attr ('input_datetime.last_motion_time_room1', 'timestamp') | timestamp_custom ("%H:%M:%S %d.%m.%y", true, 0)) }}
+      icon: mdi:motion-sensor
+      
+sensor:
+  - platform: history_stats
+    name: Число открытий двери за день
+    entity_id: binary_sensor.0x158d000452a120_contact
+    state: "on"
+    type: count
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
+
+        # - name: Время последнего открытия двери is_state
+    #   device_class: timestamp
+    #   state: >
+    #         {% if states('binary_sensor.0x158d000452a120_contact') == "on" %}
+    #         {{ now() }}
+    #         {% endif %}
+
+#   - trigger:
+#     - platform: state
+#       entity_id: binary_sensor.0x158d000452a120_contact
+#       to: 'on'
+#     sensor: 
+#     - name: Время последнего открытия двери state
+#       unique_id: last_door_time_state
+#       device_class: timestamp
+#       state: >
+#         {{  now() |  as_timestamp(states('sensor.vremia_poslednego_otkrytiia_dveri_state')) }}
+
+# #            {% if is_state('binary_sensor.0x158d000452a120_contact', 'on') %}
+
+
+
+#  '{{ as_timestamp(states.binary_sensor.0x158d000452a120_contact.last_changed) | timestamp_custom("%a %d %b %H:%M",true,0) }}'
+#    {{ as_timestamp ( now()) | timestamp_custom ('%H:%M:%S %d.%m.%y', true,0) }}        
+

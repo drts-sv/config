@@ -1,0 +1,55 @@
+zone.home:
+  radius: 20
+
+binary_sensor.0x158d000452a120_contact:
+  friendly_name: Входная дверь
+  icon: mdi:door-closed
+
+binary_sensor.0x158d0003cf7b9a_motion:
+  friendly_name: Датчик движения кухня
+
+binary_sensor.0x158d0003cf7a75_motion:
+  friendly_name: Датчик движения Даша
+
+sensor.realmeteo_temperature:
+  friendly_name: Температура воздуха (RealMeteo)
+  state_class: measurement
+
+sensor.realmeteo_humidity:
+  friendly_name: Влажность (RealMeteo)
+  state_class: measurement
+
+sensor.realmeteo_pressure:
+  friendly_name: Атмосферное давление (RealMeteo) 
+
+sensor.realmeteo_pressure_hpa:
+  friendly_name: Атмосферное давление hPa (RealMeteo) 
+  state_class: measurement
+
+sensor.worldsea_temperature:
+  friendly_name: Температура морской воды (worldsea.ru)
+  icon: mdi:waves
+  state_class: measurement
+
+sensor.realmeteo_wind_dir:
+  friendly_name: Направление ветра (RealMeteo)
+  icon: mdi:compass
+
+sensor.realmeteo_wind_speed:
+#  friendly_name: Скорость ветра (RealMeteo)
+  icon: mdi:weather-windy
+  state_class: measurement
+# датчики температуры Mi Temperature and Humidity Monitor 2 (квадратные иду)
+
+# sensor.a4c138a22b37_temperature:
+#   friendly_name: комната Саши температура
+
+# sensor.a4c1385807ca_temperature:
+#   friendly_name: комната Даши температура
+
+sensor.eur_rur:  
+  icon: mdi:currency-eur
+  state_class: measurement
+sensor.usd_rur:
+  icon: mdi:currency-usd
+  state_class: measurement

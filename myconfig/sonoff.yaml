@@ -1,0 +1,31 @@
+#sonoff LAN:
+#devices:
+#    10000bac60:
+#      name: Ёлка
+#      devicekey: 5fe72e7cfa887900073e5ac9
+
+#sonoff
+sonoff:
+  username: drts@bk.ru  
+  password: coronet#052020
+#  reload: always
+  devices:
+    10000bac60:
+        device_class: light
+        name: "SonOff POW"
+        scan_interval: '00:05:00'  # (optional) default 5 minutes
+        sensors: [power]
+  
+#  reload: once
+  
+# sensor:
+# - platform: template
+#   sensors:
+#     today_consumption:
+#       friendly_name: Today consumpion
+#       unit_of_measurement: kWh
+#       value_template: "{{ state_attr('switch.torchier', 'consumption').0 }}"
+#     ten_days_consumption:
+#       friendly_name: 10 days consumpion
+#       unit_of_measurement: kWh
+#       value_template: "{% set p=state_attr('switch.sonoff_1000abcdef', 'consumption') %}{{ p[:10]|sum if p }}"

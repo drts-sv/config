@@ -1,0 +1,133 @@
+######################Телевизор кухня################################# 
+                                                                                          
+ ######################Запуск контента################################# 
+script: 
+ mitv_hdbox:
+  alias: HD box mi
+  sequence:
+  - service: androidtv.adb_command
+    entity_id: media_player.tv_kitchen
+    data:
+      command: am start -a android.intent.action.VIEW -d -n dkc.video.hdbox/com.dkc.fs.ui.activities.HomeActivity
+ mitv_livetv:
+  alias: Включи каналы mi
+  sequence:
+  - service: androidtv.adb_command
+    entity_id: media_player.tv_kitchen
+    data:
+      command: am start -a android.intent.action.VIEW -d -n com.mediatek.wwtv.tvcenter/com.mediatek.wwtv.tvcenter.nav.TurnkeyUiMainActivity
+ mitv_vlc:
+  alias: Vlc mi
+  sequence:
+  - service: media_player.select_source
+    entity_id: media_player.tv_kitchen
+    data:
+      source: VLC
+ mitv_plex:
+  alias: Plex mi
+  sequence:
+  - service: media_player.select_source
+    entity_id: media_player.tv_kitchen
+    data:
+      source: Plex   
+ ##################################################Звук######################################   
+ 
+ mitv_volumeup:
+  alias: Прибавь звук
+  sequence:
+  - data:
+      command: VOLUME_UP
+      entity_id: media_player.tv_kitchen
+    service: androidtv.adb_command
+  - data:
+      command: VOLUME_UP
+      entity_id: media_player.tv_kitchen
+    service: androidtv.adb_command
+  - data:
+      command: VOLUME_UP
+      entity_id: media_player.tv_kitchen
+    service: androidtv.adb_command
+ mitv_volumedown:
+  alias: Сделай тише
+  sequence:
+  - data:
+      command: VOLUME_DOWN
+      entity_id: media_player.tv_kitchen
+    service: androidtv.adb_command
+  - data:
+      command: VOLUME_DOWN
+      entity_id: media_player.tv_kitchen
+    service: androidtv.adb_command
+  - data:
+      command: VOLUME_DOWN
+      entity_id: media_player.tv_kitchen
+    service: androidtv.adb_command
+ mitv_mute:
+  alias: Выключи звук
+  sequence:
+  - service: androidtv.adb_command
+    entity_id: media_player.tv_kitchen
+    data:
+      command: MUTE
+ mitv_volume5:
+  alias: Звук на 5
+  sequence:
+  - service: media_player.volume_set
+    entity_id: media_player.tv_kitchen
+    data:
+      volume_level: 0.1
+ mitv_volume10:
+  alias: Звук на 10
+  sequence:
+  - service: media_player.volume_set
+    entity_id: media_player.tv_kitchen
+    data:
+      volume_level: 0.2
+ mitv_volume15:
+  alias: Звук на 15
+  sequence:
+  - service: media_player.volume_set
+    entity_id: media_player.tv_kitchen
+    data:
+      volume_level: 0.3
+ mitv_volume20:
+  alias: Звук на 20
+  sequence:
+  - service: media_player.volume_set
+    entity_id: media_player.tv_kitchen
+    data:
+      volume_level: 0.4
+      
+###################################Нажатие кнопок########################################
+
+ mitv_off:
+  alias: Выключи телевизор на кухне
+  sequence:
+  - service: androidtv.adb_command
+    entity_id: media_player.tv_kitchen
+    data:
+      command: POWER
+      
+ mitv_chanelup:
+  alias: Следующий канал mi
+  sequence:
+  - service: androidtv.adb_command
+    entity_id: media_player.tv_kitchen
+    data:
+      command: input keyevent 19
+      
+ mitv_chaneldown:
+  alias: Предыдущий канал mi
+  sequence:
+  - service: androidtv.adb_command
+    entity_id: media_player.tv_kitchen
+    data:
+      command: input keyevent 20   
+      
+      
+ mitv_on:
+  alias: Включи телевизор на кухне
+  sequence:
+  - data: {}
+    entity_id: switch.vkliuchit_tv_kukhnia
+    service: switch.turn_on      

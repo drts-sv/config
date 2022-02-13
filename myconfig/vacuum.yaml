@@ -1,0 +1,39 @@
+#Пылесос
+
+vacuum:
+  - platform: xiaomi_vacuum
+    host: !secret xiaomi_vacuum_host
+    token: !secret xiaomi_vacuum_token
+    name: 'Кузя'
+
+sensor:
+  - platform: template
+    sensors:
+      kuzia_area:
+        friendly_name: Зона уборки Кузи
+        value_template: "{{ state_attr ('vacuum.kuzia', 'cleaning_area') }}"
+
+camera:
+  - platform: xiaomi_cloud_map_extractor
+    name: Mi Vacuum Cleaner 1C Cam
+    country: ru
+    host: !secret xiaomi_vacuum_host
+    token: !secret xiaomi_vacuum_token
+    username: !secret xiaomi_cloud_username
+    password: !secret xiaomi_cloud_password
+#    force_api: dreame
+    draw: ['all']
+    colors:
+      color_charger: [0, 255, 0, 180]
+      color_robo: [0 , 0, 255]
+  #map_transformation:
+  #  scale: 2
+  #  trim:
+  #    top: 10
+  #    bottom: 20
+  #    left: 20
+  #    right: 17
+    attributes:
+      - calibration_points
+    auto_update: true
+    scan_interval: 120

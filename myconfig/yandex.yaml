@@ -1,0 +1,133 @@
+# Example configuration.yaml entry
+yandex_smart_home:
+  notifier:
+    oauth_token: AQAAAAAL_6zsAAT7o8Cj7fXD6k9Lhtk3lLqKRvw
+    skill_id: 6435013a-990c-4b26-92e7-2d7385aa769a
+    user_id: cc7c0519cd154cde9ca12de295602350
+  settings:
+    pressure_unit: mmHg
+  filter:
+#    include_domains: # МОЖНО ВКЛЮЧИТЬ ВСЁ скопом, но попадает много лишнего 
+#      - light
+#      - switch
+    include_entities:
+      - light.wled
+      - light.torchiere
+      - media_player.mi_tv_kitchen
+      - media_player.mi_box
+      - sensor.a4c138a22b37_temperature     
+      - sensor.a4c1385807ca_temperature
+      - sensor.a4c13872bfd0_temperature
+      - sensor.a4c138ef74be_temperature
+      - sensor.glances_core_0_temperature
+      - sensor.outdoor_temperature # уличный датчик через Home Assisstant
+      - switch.mi_tv_kitchen_switch
+      - input_boolean.auto_light_on_off
+ 
+    exclude_entities:
+      # исключаем датчики влажности в помещениях, т.к. их включили в комбинированные датчики
+      - sensor.a4c138a22b37_humidity
+      - sensor.a4c1385807ca_humidity
+      - sensor.a4c13872bfd0_humidity
+      - sensor.a4c138ef74be_humidity
+      # исключим всё ненужное
+      - switch.wled_sync_send
+      - switch.adaptive_lighting_adapt_brightness_default
+      - switch.adaptive_lighting_adapt_color_default
+      - switch.adaptive_lighting_sleep_mode_default
+      - switch.adaptive_lighting_sleep_mode_default
+      - switch.adaptive_lighting_sleep_mode_adaptivnyi_svet
+      - switch.adaptive_lighting_adaptivnyi_svet
+      - switch.adaptive_lighting_default
+      - switch.adaptive_lighting_adapt_color_adaptivnyi_svet
+      - switch.adaptive_lighting_adapt_brightness_adaptivnyi_svet
+      - switch.wled_sync_receive
+      - switch.0x842e14fffe1fda0e_firmware_lock
+  entity_config:
+    light.wled:
+      room: Кухня
+# сенсор температуры процессора
+    sensor.glances_core_0_temperature:
+      type: devices.types.sensor
+      name: Температура процессора 0
+      room: Сервер
+      properties:
+        - type: temperature
+          entity: sensor.glances_core_0_temperature
+    sensor.glances_core_1_temperature:
+      type: devices.types.sensor
+      name: Температура процессора 1
+      room: Сервер
+      properties:
+        - type: temperature
+          entity: sensor.glances_core_1_temperature
+# сенсоры температуры и влажности по комнатам
+    sensor.a4c13872bfd0_temperature:
+      type:  devices.types.sensor
+      name: Климат в Сашиной комнате
+      room: Сашина комната
+      properties:
+        - type: temperature
+          entity: sensor.a4c13872bfd0_temperature
+        - type: humidity
+          entity: sensor.a4c13872bfd0_humidity
+    sensor.a4c1385807ca_temperature:
+      type:  devices.types.sensor
+      name: Климат в Дашиной комнате
+      room: Дашина комната
+      properties:
+        - type: temperature
+          entity: sensor.a4c1385807ca_temperature
+        - type: humidity
+          entity: sensor.a4c1385807ca_humidity
+    sensor.a4c138ef74be_temperature:
+      type:  devices.types.sensor
+      name: Климат в кухне
+      room: Кухня
+      properties:
+        - type: temperature
+          entity: sensor.a4c138ef74be_temperature
+        - type: humidity
+          entity: sensor.a4c138ef74be_humidity
+    sensor.a4c138a22b37_temperature:
+      type:  devices.types.sensor
+      name: Климат в гостиной
+      room: Гостиная
+      properties:
+        - type: temperature
+          entity: sensor.a4c138a22b37_temperature
+        - type: humidity
+          entity: sensor.a4c138a22b37_humidity
+# уличный термометр
+    sensor.outdoor_temperature:
+      type:  devices.types.sensor
+      name: Уличный термометр
+      room: Улица
+      properties:
+        - type: temperature
+          entity: sensor.realmeteo_temperature
+        - type: humidity
+          entity: sensor.realmeteo_humidity
+        - type: pressure
+          entity: sensor.realmeteo_pressure
+# медиаустройства 
+    media_player.mi_tv_kitchen:
+      name: Телевизор
+      room: Кухня
+      channel_set_via_media_content_id: true
+
+    media_player.mi_box:
+      name: Телевизор
+      room: Гостиная
+      channel_set_via_media_content_id: true
+
+# яндекс станция
+yandex_station:
+  include:
+  - Кондиционер  # имя вашего кондиционера
+
+sensor:
+  - platform: yandex_maps
+    name: Time to work
+    start: device_tracker.life360_sergei_khorovets
+    destination: '44.726265442424044, 37.77171760797501'  

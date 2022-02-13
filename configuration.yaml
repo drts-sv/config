@@ -1,0 +1,81 @@
+# Example configuration.yaml entry
+default_config:
+
+#dhcp:
+
+# Text to speech
+#tts:
+#  - platform: google_translate
+##########################################################################################
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+homeassistant:
+  packages: !include_dir_named myconfig
+  customize: !include customize.yaml
+##########################################################################################
+#hacs 
+hacs:
+  token: !secret HACS_github
+  appdaemon: true
+#  python_script: true
+#  theme: true
+##########################################################################################
+#wake on LAN
+wake_on_lan:
+  
+#browser_mod
+#browser_mod:
+
+#checkconfig 
+# check_config:
+#   module: checkconfig
+#   class: CheckConfig
+
+start_time:
+
+
+http:
+  # For extra security set this to only accept connections on localhost if NGINX is on the same machine
+  # Uncommenting this will mean that you can only reach Home Assistant using the proxy, not directly via IP from other clients.
+  # server_host: 127.0.0.1
+
+  use_x_forwarded_for: true
+
+  # You must set the trusted proxy IP address so that Home Assistant will properly accept connections
+  # Set this to your NGINX machine IP, or localhost if hosted on the same machine.
+
+  trusted_proxies:
+    - 192.168.1.1
+    - 192.168.1.0/24
+    - 172.30.32.0/24
+    
+panel_iframe:
+  mdiindex:
+    title: MDI Icon Index
+    icon: mdi:material-design
+    url: https://mdi.bessarabov.com/
+
+panel_custom:
+  - name: config/server_control
+    sidebar_title: Настройки
+    sidebar_icon: mdi:hammer-wrench
+    module_url: dummy
+    require_admin: true
+
+  - name: config/integrations
+    sidebar_title: Интеграции
+    sidebar_icon: mdi:puzzle
+    module_url: dummy
+    require_admin: true
+  
+  - name: hassio/dashboard
+    sidebar_title: Supervisor
+    sidebar_icon: mdi:home-assistant
+    module_url: supervisor
+    require_admin: true
+    
+system_log:
+  fire_event: true
+

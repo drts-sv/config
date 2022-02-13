@@ -1,0 +1,17 @@
+sensor:
+
+# сенсор контроля процессора сервера 
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /home
+      - type: memory_free
+      - type: processor_use
+      - type: processor_temperature
+  
+  # drts-sv/config
+  - platform: github
+    access_token: !secret github_access_token
+    repositories:
+      - path: "drts-sv/config"
+        name: config

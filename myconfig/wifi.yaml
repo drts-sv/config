@@ -1,0 +1,44 @@
+
+sensor:
+################################################################################  
+# уровень сигнала wifi
+################################################################################
+  - platform: command_line
+    name: host_wifi_level
+    command: "grep 'wlo1' /proc/net/wireless | awk '{print $4}'"
+    unit_of_measurement: "dBm"
+    value_template: >-
+      {{ value }}
+# {{ value | multiply(1)}}
+    
+  - platform: command_line
+    name: host_wifi_quality
+    command: "grep 'wlo1' /proc/net/wireless | awk '{print $3}'"
+    unit_of_measurement: "%"
+    value_template: >-
+      {{ ((( value | float(default = 0)) * 100)  / 70 ) | int }}
+    scan_interval: 300  
+
+  - platform: template
+    sensors:
+      host_wifi_rssi:
+        friendly_name: Уровень сигнала wifi сервера
+        device_class: signal_strength
+        unit_of_measurement: 'dBm'
+        value_template: '{{ states("sensor.host_wifi_level") | int( default = 0 ) }}' 
+        icon_template: >-
+          {% set rssi_level = (states('sensor.host_wifi_level')) | int( default = 0 ) %}
+          {% if -1 > rssi_level >= -50 %}
+          mdi:wifi-strength-4
+          {% elif -51 >= rssi_level > -61 %}
+          mdi:wifi-strength-3
+          {% elif -62 >= rssi_level > -72 %}
+          mdi:wifi-strength-2
+          {% elif -73 >= rssi_level > -83 %}
+          mdi:wifi-strength-1
+          {% elif -84 >= rssi_level > -94 %}
+          mdi:wifi-strength-outline
+          {% else %}
+          mdi:wifi-strength-off-outline
+          {% endif %}  
+

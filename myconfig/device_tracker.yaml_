@@ -1,0 +1,18 @@
+#Для keenetic используются данные от интеграции keenetic ndms2
+#device tracker
+#xiaomi
+# device_tracker:
+  # - platform: xiaomi
+    # host: 192.168.1.1
+    # username: admin
+    # password: coronet#052020
+#padavan
+# device_tracker: 
+#   - platform: padavan_tracker
+#     consider_home: 180
+#     interval_seconds: 30
+#     url: http://192.168.1.1/
+#     username: !secret Router_login
+#     password: !secret Router_password
+#     new_device_defaults:
+#       track_new_devices: false

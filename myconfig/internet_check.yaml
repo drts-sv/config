@@ -1,0 +1,31 @@
+# сенсор проверки доступности интернета
+binary_sensor:
+  - platform: ping
+    host: google.com
+    count: 2
+    scan_interval: 60
+    name: google_is_available
+  - platform: ping
+    host: ya.ru
+    count: 2
+    scan_interval: 60
+    name: yandex_is_available
+  - platform: template
+    sensors:
+      internet_is_available:
+        value_template: "{{ states('binary_sensor.google_is_available') == 'on' or states('binary_sensor.yandex_is_available') == 'on' }}"
+        device_class: connectivity
+
+# проверка доступности HA из сети
+  # - platform: command_line
+  #   command: 'curl --silent -XGET --max-time 3 -I https://ha.khorovets.keenetic.pro/|head -1|grep -q "HTTP/1.1 200 OK" && (echo "ON") || (echo "OFF")'
+  #   name: HA_is_working
+  #   scan_interval: 120
+  #   command_timeout: 1
+
+############# Внешний ip адрес ###########        
+sensor:
+  - platform: rest
+    resource: http://ip.jsontest.com
+    name: External_IP
+    value_template: '{{ value_json.ip }}'

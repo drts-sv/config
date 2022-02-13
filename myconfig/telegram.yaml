@@ -1,0 +1,11 @@
+#telegram
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_token
+    parse_mode: html
+    allowed_chat_ids:
+      - 171773021
+notify:
+  - platform: telegram
+    name: telegram
+    chat_id: 171773021

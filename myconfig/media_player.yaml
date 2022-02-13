@@ -1,0 +1,274 @@
+#Телек на кухне ##################################################################################
+switch:
+  - platform: wake_on_lan
+    mac: EC:FA:5C:AB:6B:5D
+    host: 192.168.1.102
+    name: mi_tv_kitchen_switch
+    turn_off:
+      service: media_player.turn_off #androidtv.adb_command
+      # entity_id: media_player.mi_tv_kitchen
+      data: {} #command: POWER
+      target:
+        entity_id: media_player.mi_tv_kitchen
+
+  - platform: wake_on_lan
+    mac:  8C:5A:F8:12:F1:77
+    host: 192.168.1.103
+    name: mi_box_switch
+    turn_off:
+      service: media_player.turn_off
+      data: {}
+      target:
+        entity_id: media_player.mi_box
+
+  - platform: template
+    switches:
+      tivi_mate:
+        value_template: "{{ (is_state_attr('media_player.mi_tv_kitchen', 'app_id', 'ar.tvplayer.tv')) }}"
+        availability_template: "{{ states('media_player.mi_tv_kitchen') != 'unavailable' }}"
+        turn_on:
+          service: media_player.select_source
+          entity_id: media_player.mi_tv_kitchen
+          data:
+            source: 'ar.tvplayer.tv'
+        turn_off:
+          service: media_player.select_source
+          entity_id: media_player.mi_tv_kitchen
+          data:
+            source: '!ar.tvplayer.tv'
+        icon_template: >-
+          {% if (is_state_attr('media_player.mi_tv_kitchen', 'app_id', 'ar.tvplayer.tv')) %}
+            mdi:television-classic
+          {% else %}
+            mdi:television-classic-off
+          {% endif %}
+
+media_player:
+  - platform: androidtv
+    host: 192.168.1.102
+    device_class: androidtv
+    name: "mi_tv_kitchen"
+    get_sources: true
+    screencap: true
+    apps:
+      ar.tvplayer.tv: "Телевидение TiVi Mate"
+      dkc.video.hdbox: "HD VideoBox"
+      com.mxtech.videoplayer.ad: "MX player"
+      com.liskovsoft.videomanager: "Smart YouTube TV"
+    # turn_on_command: "input keyevent 3"
+    # turn_off_command: "input keyevent 223"
+    state_detection_rules:
+      "com.google.android.tvlauncher":
+        - "standby"
+      "ar.tvplayer.tv":
+        - "media_session_state"
+      "dkc.video.hdbox":
+        - "paused":
+            "media_session_state": 3 # this indentation is important!
+            "wake_lock_size": 1 # this indentation is important!
+        - "playing":
+            "media_session_state": 3 # this indentation is important!
+            "wake_lock_size": 1 # this indentation is important!
+        - "standby"
+      # 'com.liskovsoft.videomanager':
+      #   - 'paused':
+      #       'media_session_state': 3  # this indentation is important!
+      #       'wake_lock_size': 1       # this indentation is important!
+      #   - 'playing':
+      #     'media_session_state': 3  # this indentation is important!
+      #   - 'standby'
+
+  ##################################################################################
+  #mi box
+  - platform: androidtv
+    host: 192.168.1.103 #!secret ip_mibox
+    device_class: androidtv
+    name: mi_box
+    get_sources: true
+    screencap: true
+    apps:
+      ar.tvplayer.tv: "Телевидение TiVi Mate"
+      dkc.video.hdbox: "HD VideoBox"
+      com.mxtech.videoplayer.ad: "MX player"
+      com.liskovsoft.videomanager: "Smart YouTube TV"
+    # state_detection_rules:
+    #   "com.google.android.tvlauncher":
+    #     - "standby"
+    #   "ar.tvplayer.tv":
+    #     - "media_session_state"
+    #   "dkc.video.hdbox":
+    #     - "paused":
+    #         "media_session_state": 3 # this indentation is important!
+    #         "wake_lock_size": 1 # this indentation is important!
+    #     - "playing":
+    #         "media_session_state": 3 # this indentation is important!
+    #         "wake_lock_size": 1 # this indentation is important!
+    #     - "standby"
+
+# вспомогательные сенсоры контроля медиа устройств
+
+# бинарный сенсор контроля состояния телевизора на кухне (вкл, когда тв доступен)
+binary_sensor:
+  - platform: template
+    sensors: # сенсор ТВ на кухне
+      mi_tv_kitchen_is_on:
+        friendly_name: "TV на кухне доступен"
+        value_template: >-
+          {{ states('media_player.mi_tv_kitchen') != 'unavailable' }}
+  - platform: template
+    sensors:
+      mi_box_is_on:
+        friendly_name: "Mi-box доступен"
+        value_template: >-
+          {{ states('media_player.mi_box') != 'unavailable' }}
+
+# сенсор, контролирующий историю состояния ТВ на кухне на основании предыдущего датчика
+sensor:
+  # mi-tv
+  - platform: history_stats
+    name: "Время просмотра ТВ на кухне"
+    entity_id: binary_sensor.mi_tv_kitchen_is_on
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}"
+    end: "{{ now() }}"
+    # mi-box
+  # mi box:
+  - platform: history_stats
+    name: "Время просмотра Mi-box"
+    entity_id: binary_sensor.mi_box_is_on
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}"
+    end: "{{ now() }}"
+# сенсор удобоваримого представления в часах и минутах
+
+script:
+  mitv_on:
+    alias: Включи телевизор
+    sequence:
+      - service: wake_on_lan.send_magic_packet
+        data:
+          mac: EC:FA:5C:AB:6B:5D
+          broadcast_address: 192.168.1.102
+    mode: single
+    icon: hass:television-off
+  mitv_off:
+    alias: Выключи телевизор
+    sequence:
+      - service: androidtv.adb_command
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          command: POWER
+    mode: single
+    icon: hass:television-off
+  mitv_hdvideobox_on:
+    alias: включи аш-ди видеобокс
+    sequence:
+      - service: androidtv.adb_command
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          command: am start -a android.intent.action.VIEW -d -n dkc.video.hdbox/com.dkc.fs.ui.activities.HomeActivity
+    mode: single
+    icon: hass:television-guide
+  mitv_hdvideobox_off:
+    alias: выключи аш-ди видеобокс
+    sequence:
+      - service: androidtv.adb_command
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          command: am force-stop dkc.video.hdbox
+    mode: single
+    icon: hass:television-guide
+  # mitv_tivimate_on:
+  #   alias: Включи телевидение
+  #   sequence:
+  #     - service: androidtv.adb_command
+  #       entity_id: media_player.mi_tv_kitchen
+  #       data:
+  #         command: am start -a android.intent.action.VIEW -d -n ar.tvplayer.tv/.ui.MainActivity
+  #   mode: single
+  #   icon: hass:television-classic
+  # mitv_tivimate_off:
+  #   alias: Выключи телевидение
+  #   sequence:
+  #     - service: androidtv.adb_command
+  #       entity_id: media_player.mi_tv_kitchen
+  #       data:
+  #         command: am force-stop ar.tvplayer.tv
+  #   mode: single
+  #   icon: hass:television-classic-off
+  mitv_tivimate_on:
+    sequence:
+    - service: media_player.select_source
+      target:
+        entity_id: media_player.mi_tv_kitchen
+      data:
+        source: 'ar.tvplayer.tv'
+
+  mitv_tivimate_off:
+    sequence:
+    - service: media_player.select_source
+      target:
+        entity_id: media_player.mi_tv_kitchen
+      data:
+        source: '!ar.tvplayer.tv'
+
+  mitv_volume_up:
+    alias: Прибавь звук на телевизоре
+    sequence:
+      - data:
+          command: VOLUME_UP
+          entity_id: media_player.mi_tv_kitchen
+        service: androidtv.adb_command
+    mode: single
+    icon: hass:volume-high
+  mitv_volume_down:
+    alias: Сделай тише телевизор
+    sequence:
+      - data:
+          command: VOLUME_DOWN
+          entity_id: media_player.mi_tv_kitchen
+        service: androidtv.adb_command
+    mode: single
+    icon: hass:volume-low
+  mitv_volume_off:
+    alias: Выключи звук на телевизоре
+    sequence:
+      - service: androidtv.adb_command
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          command: MUTE
+    mode: single
+    icon: hass:volume-mute
+  mitv_volume5:
+    alias: Звук на 5 на телевизоре
+    sequence:
+      - service: media_player.volume_set
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          volume_level: 0.1
+    mode: single
+  mitv_volume10:
+    alias: Звук на 10 на телевизоре
+    sequence:
+      - service: media_player.volume_set
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          volume_level: 0.2
+  mitv_volume15:
+    alias: Звук на 15 на телевизоре
+    sequence:
+      - service: media_player.volume_set
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          volume_level: 0.3
+  mitv_volume20:
+    alias: Звук на 20 на телевизоре
+    sequence:
+      - service: media_player.volume_set
+        entity_id: media_player.mi_tv_kitchen
+        data:
+          volume_level: 0.4
+    mode: single
+

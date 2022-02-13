@@ -1,0 +1,21 @@
+# таймер включения света
+timer:
+  light_turn_off:
+    name: Таймер автоматического выключения света кухни
+    duration: 30   
+##########################################################################################
+# конфигурация адаптивного освещения
+# adaptive_lighting:
+#   name: default
+#   lights:
+#   - light.wled
+#   transition: 1
+#   min_brightness: 1
+#   max_brightness: 80
+#   min_color_temp: 3000
+#   max_color_temp: 5500 
+#   sleep_brightness: 1
+#   sleep_color_temp: 3000
+  
+########################################################################################## 
+# automation:

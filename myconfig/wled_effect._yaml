@@ -1,0 +1,27 @@
+
+# элеименты управления
+# curl --silent http://<ip address of the wled device>/json | jq ".palettes | length"
+
+# sensor:
+#   - platform: rest
+#     name: wled_palette_count
+#     resource: http://wled.local/json
+#     value_template: "{{ value_json.palettes | length }}"
+# #    scan_interval: 600
+  
+#   - platform: rest
+#     name: wled_palettes_list
+#     resource: http://wled.local/json
+#     json_attributes: palettes
+#     value_template: 'OК'
+# #    scan_interval: 600
+
+# # элемент управления для выбора палитры
+# input_select:
+#   wled_palettes_list:
+#     name: Палитра WLED
+#     icon: mdi:palette-outline
+#     options: '' 
+
+# автоматизации
+# automation:

@@ -1,0 +1,277 @@
+sensor:
+# сенсор данных с realmeteo
+  - platform: rest
+    name: realmeteo
+    resource: https://realmeteo.ru/novoross/1/current.json
+    json_attributes_path: 'current' 
+    value_template: '{{value_json["current"]["temperature"]}}'
+    json_attributes:  
+    - humidity
+    - pressure
+    - uv
+    - solar_rad
+    - wind_speed_avg
+    - wind_dir
+    - epoch
+    scan_interval: 600
+
+  - platform: template
+    sensors:
+# realmeteo sensors    
+      realmeteo_temperature:
+        device_class: temperature
+        unit_of_measurement: "°C"
+#        state_class: measurement
+        value_template: >-
+            {{states('sensor.realmeteo')}}
+        
+      realmeteo_humidity:
+        device_class: humidity
+        unit_of_measurement: "%"
+        value_template: >-
+            {{state_attr ('sensor.realmeteo','humidity') | float | round (1)}}
+
+      realmeteo_pressure:
+        device_class: pressure
+        unit_of_measurement: "мм.рт.ст."
+        value_template: >-
+            {{state_attr ('sensor.realmeteo','pressure') | float | round (1)}}
+      
+      realmeteo_pressure_hpa:
+        device_class: pressure
+        unit_of_measurement: "hPa"
+        value_template: >-
+          {{state_attr ('sensor.realmeteo','pressure') | float * 1.33322 | round (1)}}
+
+      realmeteo_uv:
+        unit_of_measurement: "UV index"
+#        device_class: illuminance
+        value_template: >-
+            {{state_attr ('sensor.realmeteo','uv')}}
+        attribute_templates:
+          realmeteo_uv_text: >-
+            {%- set uv = state_attr ('sensor.realmeteo','uv')|float %}
+            {% if (uv) <= 3 -%} Защита не нужна. Пребывание вне помещения не представляет опасности.
+            {% elif  3 < uv <= 7 -%} - Необходима защита. В полуденные часы оставайтесь в тени. Носите одежду с длинными рукавами и шляпу. Пользуйтесь солнцезащитным кремом.
+            {% elif  7 <= uv < 9 -%} - Необходима усиленная защита. Полуденные часы пережидайте внутри помещения. Вне помещения оставайтесь в тени. Обязательно носите одежду с длинными рукавами, шляпу, пользуйтесь солнцезащитным кремом.
+            {% elif 9 <= uv -%} - Опасно - почти наверняка можно получить солнечный удар и перегрев, возможен тепловой удар. 
+            {% endif -%}
+
+      realmeteo_realmeteo_uv_text:
+#        unit_of_measurement: "мм.рт.ст."
+        value_template: >-
+            {{ state_attr ('sensor.realmeteo_uv','realmeteo_uv_text') }}
+
+
+      realmeteo_solar_rad:
+#        device_class: solar_rad
+        unit_of_measurement: "Вт/м2"
+        value_template: >-
+            {{state_attr ('sensor.realmeteo','solar_rad')}}
+
+      realmeteo_wind_speed:
+        unit_of_measurement: "м/с"
+        value_template: >-
+            {{state_attr ('sensor.realmeteo','wind_speed_avg')}}        
+        friendly_name: "Ветер {{states('sensor.realmeteo_wind_dir_full')}}"
+
+      realmeteo_wind_dir:
+        value_template: >-
+            {%- set wind_dir = state_attr ('sensor.realmeteo','wind_dir')%}
+            {% set wind_dir = (wind_dir | regex_replace(find='None', replace='Штиль', ignorecase=False)) %}
+            {% set wind_dir = (wind_dir | regex_replace(find='N', replace='C', ignorecase=False)) %}
+            {% set wind_dir = (wind_dir | regex_replace(find='E', replace='В', ignorecase=False)) %}
+            {% set wind_dir = (wind_dir | regex_replace(find='S', replace='Ю', ignorecase=False)) %}
+            {% set wind_dir = (wind_dir | regex_replace(find='W', replace='З', ignorecase=False)) %}            
+            {{ wind_dir }}
+      realmeteo_wind_dir_full:
+        value_template: >-
+            {%- set wind_dir = state_attr ('sensor.realmeteo','wind_dir')%}
+            {% if wind_dir == 'None' -%} штиль
+            {% elif wind_dir == 'S' -%} южный
+            {% elif  wind_dir == 'N' -%} северный
+            {% elif  wind_dir == 'W' -%} западный
+            {% elif  wind_dir == 'E' -%} восточный
+            {% elif  wind_dir == 'NE' -%} северо-восточный
+            {% elif  wind_dir == 'NNE' -%} северо-северо-восточный
+            {% elif  wind_dir == 'NW' -%} северо-западный
+            {% elif  wind_dir == 'NNW' -%} северо-северо-западный
+            {% elif  wind_dir == 'SE' -%} юго-восточный
+            {% elif  wind_dir == 'SSE' -%} юго-юго-восточный
+            {% elif  wind_dir == 'SW' -%} юго-западный
+            {% elif  wind_dir == 'SSW' -%} юго-юго-западный                                         
+            {% endif -%}
+#            {{ wind_dir }}
+
+      realmeteo_update_time:
+        device_class: timestamp
+        value_template: >-
+            {{state_attr ('sensor.realmeteo', 'epoch') | timestamp_local }} 
+
+#расчет эффективного значения температуры воздуха
+      temp_effect:
+        friendly_name: Ощущаемая температура
+        unit_of_measurement: °C
+        value_template: >-
+          {% set temp = states ('sensor.realmeteo_temperature') | float -%}
+          {% set hum = states ('sensor.realmeteo_humidity') | float -%}
+          {% set va = states ('sensor.realmeteo_wind_speed') | float %}
+          {% set temp_effect = 37 - (37- temp) * (0.68 - 0.0024* hum + 1/( 1.78 + 1.4 * va * 0.75)) - 0.29 * temp * (1- hum / 100) -%}
+          {{ temp_effect | round (1) }}
+        attribute_templates:
+          temp_effect_wind: >-
+            {% set temp = states ('sensor.realmeteo_temperature') | float -%}
+            {% set vaa = 1.5 * (states ('sensor.realmeteo_wind_speed') | float) ** 0.16 %}
+            {% set temp_effect_w = (13.12 + 0.6215 * temp  - 11.37 * vaa + 0.3965 * temp * vaa ) -%}
+            {{ temp_effect_w | round (1)}}
+#          friendly_name: Ощущаемая температура с учётом ветра
+          temp_effect_hum: >-
+            {% set temp = states ('sensor.realmeteo_temperature') | float -%}
+            {% set hum = states ('sensor.realmeteo_humidity') | float -%}
+            {% set temp_effect_h = temp - 0.4 * (temp - 10) * (1- hum / 100) %}
+            {{ temp_effect_h | round (1)}}
+          temp_effect_text: >-
+            {%set temp = states('sensor.temp_effect') | float(default=0) %}
+            {% if (temp) < -50 -%} опасно - обморожение открытых участков кожи возможно менее чем через 5 минут
+            {% elif -50 <= temp < -38 -%} - предельно осторожно - обморожение открытых участков кожи возможно через 10 -15 минут
+            {% elif -38 <= temp < -28 -%} - осторожно - обморожение открытых участков кожи возможно через 20-30 минут
+            {% elif -28 <= temp < 27 -%} - опасности для одетого по погоде человека нет
+            {% elif 27 <= temp < 32 -%} - осторожно - возможно утомление при длительных активных нагрузках на открытом воздухе
+            {% elif 32 <= temp < 40 -%} - предельно осторожно - возможен солнечный удар при длительных активных нагрузках на открытом воздухе
+            {% elif 40 <= temp < 55 -%} - опасно - почти наверняка можно получить солнечный удар и перегрев, возможен тепловой удар
+            {% elif temp >= 55 -%} предельно опасно - быстрый тепловой или солнечный удар
+            {% endif -%}
+
+# < ..-50°С - опасно - обморожение открытых участков кожи возможно менее чем через 5 минут
+# -38..-50°С - предельно осторожно - обморожение открытых участков кожи возможно через 10 -15 минут
+# -28..-38°С - осторожно - обморожение открытых участков кожи возможно через 20-30 минут
+# -28..27°С - опасности для одетого по погоде человека нет
+# 27..32°С - осторожно - возможно утомление при длительных активных нагрузках на открытом воздухе
+# 32..40°С - предельно осторожно - возможен солнечный удар при длительных активных нагрузках на открытом воздухе
+# 40..55°С - опасно - почти наверняка можно получить солнечный удар и перегрев, возможен тепловой удар
+# > 55°С - предельно опасно - быстрый тепловой или солнечный удар
+      dewpoint:
+        device_class: temperature
+        unit_of_measurement: "°C"
+        value_template: >-
+          {% set temp = states ('sensor.realmeteo_temperature') | float -%}
+          {% set hum = states ('sensor.realmeteo_humidity') | float -%}
+          {%- set T = (( temp * 9 / 5)+ 32) %}
+          {%- set b = 17.368 if T >0 else 17.966 %}
+          {%- set c = 238.88 if T >0 else 247.15 %}
+          {%- set pa = hum / 100 * e**(b * T / (c + T)) %}
+          {{((c * log(pa) / (b - log(pa)) -32 ) * 5/9)|round(1)}}
+
+      heatindex:
+        device_class: temperature
+        unit_of_measurement: "°C"
+        value_template: >-
+          {% set temp = states ('sensor.realmeteo_temperature') | float -%}
+          {% set hum = states ('sensor.realmeteo_humidity') | float -%}
+          {%- set T = (( temp * 9 / 5)+ 32) %}
+          {%- set c1 = -42.379 %}
+          {%- set c2 = 2.04901523 %}
+          {%- set c3 = 10.14333127 %}
+          {%- set c4 = -0.22475541 %}
+          {%- set c5 = -6.83783e-3 %}
+          {%- set c6 = -5.481717e-2 %}
+          {%- set c7 = 1.22874e-3 %}
+          {%- set c8 = 8.5282e-4 %}
+          {%- set c9 = -1.99e-6 %}
+          {%- set HI = 0.5 * (T + 61 + (T - 68) * 1.2 + hum * 0.094) %}
+          {%- set HI_result = HI if HI <80 else c1 + c2*T + c3*hum + c4*T*hum + c5*T**2 + c6*hum**2 + c7*T**2*hum + c8*T*hum**2 + c9*T**2*hum**2 %}
+          {{ ((HI_result -32 ) * 5/9)|round(1)}}
+            
+      windchill:
+        device_class: temperature
+        unit_of_measurement: "°C"
+        value_template: >-
+            {%- set Tc = states('sensor.realmeteo_temperature')|float %}
+            {%- set Vc = states('sensor.realmeteo_wind_speed')|float %}
+            {%- set V = Vc * 2.23694 %}
+            {%- set T = (( Tc * 9 / 5)+ 32) %}
+            {{((35.74 + (0.6215 * T) - 35.75 * V**0.16 + 0.4275 * T * V**0.16 -32 ) * 5/9)|round(1)}}
+            
+      feelslike:
+        device_class: temperature
+        unit_of_measurement: "°C"
+        value_template: >-
+            {%- set Tc = states('sensor.realmeteo_temperature')|float %}
+            {%- set Vc = states('sensor.realmeteo_wind_speed')|float %}
+            {%- set V = Vc * 2.23694 %}
+            {%- set T = (( Tc * 9 / 5)+ 32) %}
+            {%- if T <= 50 and Vc > 3 %}
+              {{states('sensor.windchill')|float|round(2)}}
+            {%- elif T >= 80 %}{{states('sensor.heatindex')|float|round(2)}}
+            {%- else %}{{Tc|round(2)}}
+            {%- endif %}
+
+      # pressure_change_3h
+      #   value_template: "{{state_attr('sensor.pressure_stats_3h','change')|float}}"
+      #   unit_of_measurement: 'hPa'
+      #   device_class: pressure
+
+      # pressure_change_6h
+      #   value_template: "{{state_attr('sensor.pressure_stats_6h','change')|float}}"
+      #   unit_of_measurement: 'hPa'
+      #   device_class: pressure      
+      
+
+#  - platform: scrape
+#    name: Magnetic Storm
+#    resource: https://tesis.lebedev.ru/magnetic_storms.html
+#    select: table.main td p:nth-of-type(4) > b
+#    unit_of_measurement: " "
+#    value_template: "{{ value.split('(')[0] | int(0) }}"
+#    scan_interval: 36000
+
+# worldseamap 
+  - platform: scrape
+    name: worldsea_temperature
+    resource: http://worldseatemp.com/ru/Russia/Novorossiysk/
+    select: 'td.center'
+    unit_of_measurement: "°C"
+    state_class: measurement
+    value_template: >- 
+      {% if value == "unknown" or value == "" -%}
+        unavailable
+      {%- else -%}
+        {{value | replace ("°C", "") | float}}
+      {%- endif %}
+    scan_interval: 7200
+
+#  - platform: scrape
+#    name: meteo_alexino_wind
+#    resource: http://meteoexplorer.ru/ms/index.php/karta#
+#    select: 'id_163985385467311973500 > ymaps > div'
+#    unit_of_measurement: "°C"
+#    state_class: measurement
+#    scan_interval: 3600
+
+# - platform: command_line
+#   name: Sandra Yandex Rain
+#   command: >
+#     wget -q --user-agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36' "https://yandex.ru/pogoda/maps/nowcast?lat={{state_attr('device_tracker.life360_sandra_tsymbal','latitude')}}&lon={{state_attr('device_tracker.life360_sandra_tsymbal','longitude')}}" -O /dev/stdout | sed 's/>/>\n/g' | grep "weather-maps-fact__nowcast-alert" -A1 | tail -1 | sed 's/<\/div>//g' | sed 's|.*\. ||'
+#   scan_interval: 120
+#   value_template: >
+#     {% if value == "unknown" or value == "" -%}
+#     unavailable
+#     {%- else -%}
+#     {{value}}
+#     {%- endif %}
+
+  - platform: statistics
+    name: out_temperature_max_24h
+    entity_id: sensor.realmeteo_temperature
+    state_characteristic: value_max
+    sampling_size: 6000
+    max_age:
+      hours: 24
+
+  - platform: statistics
+    name: out_temperature_min_24h
+    entity_id: sensor.realmeteo_temperature
+    state_characteristic: value_min
+    sampling_size: 6000
+    max_age:
+      hours: 24

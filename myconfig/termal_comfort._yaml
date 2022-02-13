@@ -1,0 +1,13 @@
+sensor:
+  - platform: thermal_comfort
+    sensors:
+      realmeteo_additional:
+        friendly_name: RealMeteo
+        temperature_sensor: sensor.realmeteo_temperature
+        humidity_sensor: sensor.realmeteo_humidity
+        # scan_interval: 300
+        # sensor_types:
+        #   - absolutehumidity
+        #   - heatindex
+        #   - dewpoint
+        #   - perception

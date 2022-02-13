@@ -1,0 +1,17 @@
+input_datetime:
+  last_opendoor_time:
+    name: Время последнего открытия двери
+    has_date: true
+    has_time: true
+    icon: mdi:door-open
+# последняя сработка датчика движения кухня
+  last_motion_time_kitchen:
+    name: Время последнего движения на кухне
+    has_date: true
+    has_time: true
+    icon: mdi:motion-sensor
+  last_motion_time_room1:
+    name: Время последнего движения комната 1
+    has_date: true
+    has_time: true
+    icon: mdi:motion-sensor
