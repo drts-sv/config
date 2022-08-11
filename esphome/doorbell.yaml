@@ -6,18 +6,20 @@ esphome:
   comment: Sonoff Mini doorbell
   
 esp8266:
+#  board: esp01_1m
   board: esp8285
-  esp8266_restore_from_flash: true
+  restore_from_flash: true
+# esp8266_restore_from_flash: true  
 
 wifi:
   ssid: !secret wifi_ssid
-  password: !secret wifi_pass
+  password: !secret wifi_password
   fast_connect: true
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Ring Hotspot"
-    password: !secret wifi_pass
+    password: !secret wifi_password
 
 # Enable logging
 logger:
@@ -28,14 +30,17 @@ api:
   reboot_timeout: 0min
   
 ota:
+  password: "65bff9293488657c5e0d286ee0b62e0f"
   
 globals:
+# режим тишины
   - id: mute_mode
     type: bool
     initial_value: 'false'
+# режим короткого звонка
   - id: short_mode
     type: bool
-    initial_value: 'false
+    initial_value: 'false'
 
 text_sensor:
   - platform: template
@@ -91,19 +96,19 @@ button:
 
 
 binary_sensor:
-// internal button (кнопка на sonoff)
+# internal button (кнопка на sonoff)
   - platform: gpio
     pin:
       number: GPIO0
       mode: INPUT_PULLUP
       inverted: True
     name: ring_btn0
- // клик по кнопке переключает состояние звонка 
+# клик по кнопке переключает состояние звонка 
     on_click:
       - min_length: 50ms
         then:
           - switch.toggle: ring_relay
- // SW button (внешняя кнопка звонка)
+# SW button (внешняя кнопка звонка)
   - platform: gpio
     pin:
       number: GPIO4
@@ -117,12 +122,12 @@ binary_sensor:
             - switch.is_off: mute
           then:
             - switch.turn_on: ring_relay
-            if:
-              condition:
-                - switch.is_on: short_ring
-              then:
-                delay (300)
-                - switch.turn_off: ring_relay
+            - if:
+                condition:
+                  - switch.is_on: short_ring
+                then:
+                  - delay: 300ms
+                  - switch.turn_off: ring_relay
     on_release:
       then:
         - switch.turn_off: ring_relay
@@ -137,12 +142,14 @@ status_led:
     inverted: True
     
 switch:
+# реле звонка
   - platform: gpio
     id: ring_relay
     name: "ring_relay"
     pin: GPIO12
     restore_mode: ALWAYS_OFF
-   
+
+# переключатель mute   
   - platform: template
     name: ${board_name}_Mute
     id: mute
@@ -160,24 +167,24 @@ switch:
           id: mute_mode
           value: 'false'
       - switch.turn_off: ring_relay
-      
-   - platform: template
+# переключатель короткого звонка      
+  - platform: template
     name: ${board_name}_short_ring
     id: short_ring
     icon: mdi:bell-sleep-outline
     optimistic: true
     restore_state: true
     lambda: |-
-      return id(short_mode)    
+     return id(short_mode)    
     on_turn_on:
-      - globals.set:
-          id: mute_mode
-          value: 'true'
+     - globals.set:
+         id: mute_mode
+         value: 'true'
     on_turn_off:
-      - globals.set:
-          id: mute_mode
-          value: 'false'
-      - switch.turn_off: ring_relay
+     - globals.set:
+         id: mute_mode
+         value: 'false'
+     - switch.turn_off: ring_relay
 time:
   - platform: sntp
     id: sntp_time
